@@ -6,8 +6,8 @@ DRIVERS="mesa vulkan-radeon libva-mesa-driver rocm-hip-sdk intel-ucode"
 TOOLS="wget curl git p7zip unrar unzip zip python nodejs npm base-devel"
 SYSTEM="gparted openssh neovim htop nvtop fastfetch fish mpv pandoc blender rclone"
 FONTS="ttf-jetbrains-mono-nerd noto-fonts-cjk fcitx5-im fcitx5-chewing"
-DESKTOP="niri xwayland-satellite fuzzel alacritty xdg-desktop-portal wl-clipboard mpvpaper mako hyprlock nautilus gvfs libnautilus-extension polkit-kde-agent xorg-xhost nwg-look"
-VIRT="ufw tailscale qemu-desktop libvirt dnsmasq libguestfs virt-manager docker docker-compose"
+DESKTOP="niri xwayland-satellite fuzzel alacritty xdg-desktop-portal wl-clipboard swaybg mako hyprlock nautilus gvfs libnautilus-extension polkit-kde-agent xorg-xhost nwg-look"
+VIRT="ufw tailscale docker docker-compose"
 
 sudo pacman -Syu --needed --noconfirm $DRIVERS $TOOLS $SYSTEM $FONTS $DESKTOP $VIRT
 
@@ -36,25 +36,19 @@ echo "--- 6. 使用 yay 安裝其餘軟體 ---"
 yay -S --noconfirm google-chrome tty-clock visual-studio-code-bin
 
 echo "--- 7. 啟動所有服務 ---"
-services=(libvirtd virtnetworkd virtstoraged tailscaled docker ufw)
+services=(tailscaled docker ufw)
 for svc in "${services[@]}"; do
   sudo systemctl enable --now "$svc"
 done
 
-echo "--- 8. 設定虛擬化網路 ---"
-sleep 2
-sudo virsh net-start default 2>/dev/null || true
-sudo virsh net-autostart default
+echo "--- 8. 使用者權限設定 ---"
+sudo usermod -aG docker,render,video $USER
 
-echo "--- 9. 使用者權限設定 ---"
-sudo usermod -aG libvirt,kvm,docker,render,video $USER
-
-echo "--- 10. 網路與字體設定 ---"
+echo "--- 9. 網路與字體設定 ---"
 sudo ufw enable --force
-sudo tailscale up --ssh
 fc-cache -fv
 
-echo "--- 11. 從 GitHub 恢復 Dotfiles ---"
+echo "--- 10. 從 GitHub 恢復 Dotfiles ---"
 DOTFILES_REPO="https://github.com/st-428/amd-config.git"
 TEMP_DOTFILES="/tmp/my_dotfiles"
 git clone $DOTFILES_REPO $TEMP_DOTFILES
